@@ -1,1 +1,79 @@
-#to be done 
+#!/bin/bash
+
+# Name of the executable
+EXE=./exe
+
+# Execute the makefile
+make all
+
+# Redirect output of the executable to a file
+$EXE > output.txt
+
+# Expected values, adjust as necessary
+declare -A expected_values=(
+    ["0"]=0.002397
+    ["100"]=0.002397
+    ["200"]=0.001204
+    ["300"]=0.000804
+    ["400"]=0.000603
+    ["500"]=0.000483
+    ["600"]=0.000403
+    ["700"]=0.000345
+    ["800"]=0.000302
+    ["900"]=0.000269
+)
+
+# Tolerance
+tolerance=0.000001
+
+# Execution time range
+MIN_TIME=30.0
+MAX_TIME=50.0
+
+# Flags to mark if output is as expected and execution time is within range
+is_output_expected=true
+is_exec_time_within_range=true
+
+# Iterate through each line of the output
+while read -r line; do
+    # Check if line contains total time
+    if [[ $line == *"total"* ]]; then
+        exec_time=$(echo "$line" | awk '{print $2}')
+        if (( $(echo "$exec_time < $MIN_TIME" | bc -l) )) || (( $(echo "$exec_time > $MAX_TIME" | bc -l) )); then
+            is_exec_time_within_range=false
+            echo "Execution time ($exec_time s) is not within the expected range ($MIN_TIME - $MAX_TIME s)."
+        fi
+        continue
+    fi
+
+    # Get the iteration and value
+    iteration=$(echo "$line" | awk '{print $1}' | tr -d ',')
+    value=$(echo "$line" | awk '{print $2}')
+
+    # echo "Read iteration: $iteration, value: $value"
+
+    # Compare with expected value, if an expected value is defined
+    if [ "${expected_values[$iteration]}" != "" ]; then
+        #echo "Expected value for iteration $iteration is defined"
+        difference=$(echo "${expected_values[$iteration]} - $value" | bc -l | tr -d -)
+
+        #echo "Difference at iteration $iteration is $difference"
+
+        if (( $(echo "$difference > $tolerance" | bc -l) )); then
+            is_output_expected=false
+            echo "Value at iteration $iteration is $value, but expected ${expected_values[$iteration]}."
+        fi
+    fi
+done < output.txt
+
+if $is_output_expected; then
+    echo "accepted."
+else
+    echo "rejeted."
+fi
+
+if $is_exec_time_within_range; then
+    echo "Execution time is within the expected range."
+else
+    echo "Execution time is not within the expected range."
+fi
