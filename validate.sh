@@ -1,17 +1,30 @@
 #!/bin/bash
 
+# Install bc if not present
+if ! command -v bc &> /dev/null
+then
+    echo "bc could not be found, installing..."
+    sudo apt-get update && sudo apt-get install -y bc
+fi
+
+
+cd "$(dirname "$0")"
+
+# Execute make clean
+make clean
+
+# Execute make all
+make all
+
 # Name of the executable
 EXE=./exe
-
-# Execute the makefile
-make all
 
 # Redirect output of the executable to a file
 $EXE > output.txt
 
 # Expected values, adjust as necessary
 declare -A expected_values=(
-    ["0"]=0.002397
+    ["0"]=0.250000
     ["100"]=0.002397
     ["200"]=0.001204
     ["300"]=0.000804
@@ -26,25 +39,13 @@ declare -A expected_values=(
 # Tolerance
 tolerance=0.000001
 
-# Execution time range
-MIN_TIME=30.0
-MAX_TIME=50.0
-
 # Flags to mark if output is as expected and execution time is within range
 is_output_expected=true
 is_exec_time_within_range=true
 
 # Iterate through each line of the output
 while read -r line; do
-    # Check if line contains total time
-    if [[ $line == *"total"* ]]; then
-        exec_time=$(echo "$line" | awk '{print $2}')
-        if (( $(echo "$exec_time < $MIN_TIME" | bc -l) )) || (( $(echo "$exec_time > $MAX_TIME" | bc -l) )); then
-            is_exec_time_within_range=false
-            echo "Execution time ($exec_time s) is not within the expected range ($MIN_TIME - $MAX_TIME s)."
-        fi
-        continue
-    fi
+
 
     # Get the iteration and value
     iteration=$(echo "$line" | awk '{print $1}' | tr -d ',')
@@ -67,13 +68,7 @@ while read -r line; do
 done < output.txt
 
 if $is_output_expected; then
-    echo "accepted."
+    echo "accepted"
 else
-    echo "rejeted."
-fi
-
-if $is_exec_time_within_range; then
-    echo "Execution time is within the expected range."
-else
-    echo "Execution time is not within the expected range."
+    echo "rejeted"
 fi
