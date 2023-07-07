@@ -4,10 +4,11 @@
 cd "$(dirname "$0")"
 
 # Execute make clean
-make clean
+
 
 # Execute make all
-make all
+source ./make.sh
+
 
 # Name of the executable
 EXE=./exe
