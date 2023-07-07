@@ -1,3 +1,9 @@
+# Install bc if not present
+if ! command -v bc &> /dev/null
+then
+    echo "bc could not be found, installing..."
+    sudo apt-get update && sudo apt-get install -y bc
+fi
 CC=icc
 LD=icc
 CFLAGS=-O3 -qopenmp
