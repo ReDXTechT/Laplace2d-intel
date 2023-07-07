@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# Install bc if not present
-if ! command -v bc &> /dev/null
-then
-    echo "bc could not be found, installing..."
-    sudo apt-get update && sudo apt-get install -y bc
-fi
-
 
 cd "$(dirname "$0")"
 
@@ -18,6 +11,7 @@ make all
 
 # Name of the executable
 EXE=./exe
+{ time $EXE > output.txt; } 2> time.txt
 
 # Redirect output of the executable to a file
 $EXE > output.txt
@@ -66,7 +60,8 @@ while read -r line; do
         fi
     fi
 done < output.txt
-
+echo "Execution time:"
+cat time.txt
 if $is_output_expected; then
     echo "accepted"
 else
